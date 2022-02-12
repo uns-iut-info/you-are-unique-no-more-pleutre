@@ -48,7 +48,7 @@ class App {
 
     private async _main(): Promise<void> {
         // switch to the first state
-        await this._stateManager.switchTo(States.GAME);
+        await this._stateManager.switchTo(States.MAINMENU);
 
         // register a render loop to repeatedly render the scene
         this._engine.runRenderLoop(() => {
