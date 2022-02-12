@@ -17,10 +17,13 @@ import {
     ShadowGenerator,
     Quaternion,
     Matrix,
+    AbstractMesh,
+    Nullable,
 } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
 import { Environment } from "./environment";
 import { Player } from "./characterController";
+import { PlayerInput } from "./inputController";
 
 enum State {
     START = 0,
@@ -36,13 +39,14 @@ class App {
     private _engine: Engine;
 
     //Game State Related
-    public assets!: { mesh: Mesh };
+    public assets : any;
+    private _input!: PlayerInput;
     private _environment!: Environment;
     private _player!: Player;
 
     //Scene - related
     private _state: number = 0;
-    private _gamescene!: Scene;
+    private _gamescene: any;
     private _cutScene!: Scene;
 
     constructor() {
@@ -232,8 +236,8 @@ class App {
             outer.bakeTransformIntoVertices(Matrix.Translation(0, 1.5, 0));
 
             //for collisions
-            outer.ellipsoid = new Vector3(1, 1.5, 1);
-            outer.ellipsoidOffset = new Vector3(0, 1.5, 0);
+            // outer.ellipsoid = new Vector3(1, 1.5, 1);
+            // outer.ellipsoidOffset = new Vector3(0, 1.5, 0);
 
             outer.rotationQuaternion = new Quaternion(0, 1, 0, 0); // rotate the player mesh 180 since we want to see the back of the player
 
@@ -298,7 +302,13 @@ class App {
         shadowGenerator.darkness = 0.4;
 
         //Create the player
-        this._player = new Player(this.assets, scene, shadowGenerator); //dont have inputs yet so we dont need to pass it in
+        this._player = new Player(
+            this.assets,
+            scene,
+            shadowGenerator,
+            this._input
+        );
+        const camera = this._player.activatePlayerCamera();
     }
 
     private async _goToGame() {
@@ -332,16 +342,15 @@ class App {
             scene.detachControl(); //observables disabled
         });
 
+        //--INPUT--
+        this._input = new PlayerInput(scene); //detect keyboard/mobile inputs
+
         //primitive character and setting
         await this._initializeGameAsync(scene);
 
         //--WHEN SCENE FINISHED LOADING--
         await scene.whenReadyAsync();
-
-        const outerMersh = scene.getMeshByName("outer");
-        if (outerMersh !== null) {
-            outerMersh.position = new Vector3(0, 3, 0);
-        }
+        scene.getMeshByName("outer").position = new Vector3(0, 3, 0);
         //get rid of start scene, switch to gamescene and change states
         this._scene.dispose();
         this._state = State.GAME;

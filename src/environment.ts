@@ -9,6 +9,6 @@ export class Environment {
 
     public async load() {
         var ground = Mesh.CreateBox("ground", 24, this._scene);
-        ground.scaling = new Vector3(1, 0.02, 1);
+        ground.scaling = new Vector3(1, 0.2, 1);
     }
 }
