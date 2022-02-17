@@ -32,6 +32,8 @@ export class StatesManager {
 
     public async switchTo(state: States) {
 
+        this._scene.dispose();
+
         switch (state) {
             case States.MAINMENU:
                 const mainMenu = new MainMenuState(this._engine, this);
