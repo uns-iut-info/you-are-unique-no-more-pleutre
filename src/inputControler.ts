@@ -14,6 +14,8 @@ export class PlayerInput {
     //tracks whether or not there is movement in that axis
     public horizontalAxis: number = 0;
     public verticalAxis: number = 0;
+    public rotateCamera: boolean = false;
+    public jumpKeyDown: boolean = false;
 
     constructor(scene: Scene) {
         scene.actionManager = new ActionManager(scene);
@@ -58,6 +60,18 @@ export class PlayerInput {
         } else {
             this.horizontal = 0;
             this.horizontalAxis = 0;
+        }
+
+        if (this.inputMap["Control"]) {
+            this.rotateCamera = true;
+        } else {
+            this.rotateCamera = false;
+        }
+
+        if (this.inputMap[" "]) {
+            this.jumpKeyDown = true;
+        } else {
+            this.jumpKeyDown = false;
         }
     }
 }
