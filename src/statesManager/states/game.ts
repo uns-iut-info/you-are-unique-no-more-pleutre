@@ -21,6 +21,7 @@ import { States } from "../statesEnum";
 import { SandBox } from "../../environements/sandbox";
 import { Player } from "../../player";
 import { PlayerInput } from "../../inputControler";
+import { PlayerCharacter } from "../../assets/characters/player_asset";
 
 export class Game {
     private _engine: Engine;
@@ -50,8 +51,9 @@ export class Game {
         const environment = new SandBox(scene);
         await environment.load(); //environment
 
-        await this._loadCharacterAssets(scene);
-        // new Player(scene);
+        // await this._loadCharacterAssets(scene);
+        const pc = new PlayerCharacter(scene);
+        this.assets = pc._loadCharacterAssets(scene);
 
         const light2 = new PointLight(
             "sparklight",
@@ -97,65 +99,5 @@ export class Game {
 
         return scene;
     }
-
-    private async _loadCharacterAssets(scene: Scene) {
-        async function loadCharacter() {
-            //collision mesh
-            const outer = MeshBuilder.CreateBox(
-                "outer",
-                { width: 2, depth: 1, height: 3 },
-                scene
-            );
-            // outer.isVisible = false;
-            outer.isPickable = false;
-            // outer.checkCollisions = true;
-
-            //move origin of box collider to the bottom of the mesh (to match player mesh)
-            outer.bakeTransformIntoVertices(Matrix.Translation(0, 1.5, 0));
-
-            //for collisions
-            outer.ellipsoid = new Vector3(1, 1.5, 1);
-            outer.ellipsoidOffset = new Vector3(0, 1.5, 0);
-
-            outer.rotationQuaternion = new Quaternion(0, 1, 0, 0); // rotate the player mesh 180 since we want to see the back of the player
-
-            var box = MeshBuilder.CreateBox(
-                "Small1",
-                {
-                    width: 0.5,
-                    depth: 0.5,
-                    height: 0.25,
-                    faceColors: [
-                        new Color4(1, 0, 1, 1),
-                        new Color4(1, 1, 1, 1),
-                        new Color4(0, 0, 0, 1),
-                        new Color4(1, 1, 0, 1),
-                        new Color4(0, 1, 1, 1),
-                        new Color4(0, 0, 1, 1),
-                    ],
-                },
-                scene
-            );
-            box.position.y = 1.5;
-            box.position.z = 1;
-
-            var body = Mesh.CreateCylinder("body", 3, 2, 2, 0, 0, scene);
-            var bodymtl = new StandardMaterial("red", scene);
-            bodymtl.diffuseColor = new Color3(0.8, 0.5, 0.5);
-            body.material = bodymtl;
-            body.isPickable = false;
-            body.bakeTransformIntoVertices(Matrix.Translation(0, 1.5, 0)); // simulates the imported mesh's origin
-
-            //parent the meshes
-            box.parent = body;
-            body.parent = outer;
-
-            return {
-                mesh: outer as Mesh,
-            };
-        }
-        return loadCharacter().then((assets) => {
-            this.assets = assets;
-        });
-    }
+    
 }
