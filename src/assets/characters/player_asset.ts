@@ -13,13 +13,15 @@ export class PlayerCharacter {
         //collision mesh
         const outer = MeshBuilder.CreateBox(
             "outer",
-            { width: 2, depth: 2, height: 3 },
+            { width: 2, depth: 1, height: 3 },
             scene
         );
         // outer.isVisible = false;
         outer.isPickable = false;
         outer.checkCollisions = true;
 
+        outer.rotationQuaternion = new Quaternion(0, 1, 0, 0); // rotate the player mesh 180 since we want to see the back of the player
+        
         //move origin of box collider to the bottom of the mesh (to match player mesh)
         outer.bakeTransformIntoVertices(Matrix.Translation(0, 1.5, 0));
 

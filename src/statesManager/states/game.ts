@@ -54,6 +54,7 @@ export class Game {
         // await this._loadCharacterAssets(scene);
         const pc = new PlayerCharacter(scene);
         this.assets = pc._loadCharacterAssets(scene);
+        this.assets.mesh.position._y = 1;
 
         const light2 = new PointLight(
             "sparklight",

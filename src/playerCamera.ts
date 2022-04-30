@@ -16,7 +16,7 @@ export class PlayerCamera {
   public camera!: any;
 
   private static readonly ORIGINAL_TILT: Vector3 = new Vector3(
-    Math.PI / 6,
+    0,
     0,
     0
   );

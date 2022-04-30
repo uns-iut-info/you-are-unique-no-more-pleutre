@@ -12,14 +12,14 @@ export class Player extends TransformNode {
     public mesh: Mesh; //outer collisionbox of player
 
     //const values
-    private static readonly PLAYER_SPEED: number = 0.35;
+    private static readonly PLAYER_SPEED: number = 30;
 
     //player movement vars
     private _deltaTime: number = 0;
     private _h!: number;
     private _v!: number;
 
-    private _moveDirection: Vector3 = new Vector3();
+    private _speedVector: Vector3 = new Vector3();
     private _inputAmt!: number;
 
 
@@ -70,7 +70,7 @@ export class Player extends TransformNode {
         //check if there is movement to determine if rotation is needed
         this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
 
-        this._moveDirection = Vector3.Zero(); // vector that holds movement information
+        let next_vector = Vector3.Zero(); // vector that holds movement information
         this._h = this._input.horizontal; //x-axis
         this._v = this._input.vertical; //z-axis
 
@@ -84,10 +84,10 @@ export class Player extends TransformNode {
         // movement based off of camera's view
         let move = correctedHorizontal.addInPlace(correctedVertical);
 
-        // clear y so that the character doesnt fly up, normalize for next step
-        this._moveDirection = new Vector3(
+        // normalize for next step
+        next_vector = new Vector3(
             move.normalize().x,
-            0,
+            this._speedVector.y,
             move.normalize().z
         );
 
@@ -102,8 +102,10 @@ export class Player extends TransformNode {
         }
 
         //final movement that takes into consideration the inputs
-        this._moveDirection = this._moveDirection.scaleInPlace(
-            this._inputAmt * Player.PLAYER_SPEED
+        this._speedVector = new Vector3(
+            next_vector._x * this._inputAmt * Player.PLAYER_SPEED,
+            next_vector._y,
+            next_vector._z * this._inputAmt * Player.PLAYER_SPEED,
         );
     }
 
@@ -132,8 +134,19 @@ export class Player extends TransformNode {
     }
 
     private _beforeRenderUpdate(): void {
-        this._updateFromControls();
-        this._gravity.updateGravity(this._deltaTime, this._moveDirection);
+        const dt = 0.01;
+        let accumulator = 0.0;
+
+        const frameTime = this.scene.getEngine().getDeltaTime() / 1000.0;
+
+        accumulator += frameTime;
+
+        while (accumulator >= dt) {
+            accumulator -= dt;
+            this._updateFromControls();
+            this._gravity.updateGravity(this._speedVector, dt);
+        }
+
     }
 
     public activatePlayerCamera(): UniversalCamera {
