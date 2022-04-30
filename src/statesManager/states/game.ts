@@ -1,84 +1,49 @@
-import {
-    Scene,
-    Vector3,
-    Engine,
-    Color4,
-    FreeCamera,
-    HemisphericLight,
-    MeshBuilder,
-    ArcRotateCamera,
-    Mesh,
-    Matrix,
-    StandardMaterial,
-    Color3,
-    Quaternion,
-    PointLight,
-    ShadowGenerator,
-} from "@babylonjs/core";
+import { Engine, Scene } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
-import { StatesManager } from "../statseManager";
-import { States } from "../statesEnum";
+import { PlayerCharacter as PleutreAsset } from "../../assets/characters/player_asset";
 import { SandBox } from "../../environements/sandbox";
-import { Player } from "../../player";
 import { PlayerInput } from "../../inputControler";
-import { PlayerCharacter } from "../../assets/characters/player_asset";
+import { Player } from "../../player";
+import { PlayerCamera } from "../../playerCamera";
+import { States } from "../statesEnum";
+import { StatesManager } from "../statseManager";
 
 export class Game {
     private _engine: Engine;
     private _stateManage: StatesManager;
-    public assets: any;
+    private _scene: Scene;
+
+    private _player!: Player;
+    private _camera!: PlayerCamera;
+    private _input!: PlayerInput
 
     constructor(engine: Engine, stateManager: StatesManager) {
         this._engine = engine;
         this._stateManage = stateManager;
+        this._scene = new Scene(this._engine);
     }
 
     public async load() {
-        let scene = new Scene(this._engine);
-        scene.clearColor = new Color4(
-            0.01568627450980392,
-            0.01568627450980392,
-            0.20392156862745098
+
+        // Environement
+        const environment = new SandBox(this._scene);
+        await environment.load();
+
+        // Player Asset
+        const asset = new PleutreAsset(this._scene).load(this._scene);
+        asset.mesh.position._y = 5;
+
+        // Input
+        this._input = new PlayerInput(this._scene);
+
+        // Player
+        this._player = new Player(
+            asset,
+            this._scene,
         );
 
-        const light = new HemisphericLight(
-            "light1",
-            new Vector3(0, 1, 0),
-            scene
-        );
-        light.intensity = 0.5;
-
-        const environment = new SandBox(scene);
-        await environment.load(); //environment
-
-        // await this._loadCharacterAssets(scene);
-        const pc = new PlayerCharacter(scene);
-        this.assets = pc._loadCharacterAssets(scene);
-        this.assets.mesh.position._y = 1;
-
-        const light2 = new PointLight(
-            "sparklight",
-            new Vector3(0, 0, 0),
-            scene
-        );
-        light2.diffuse = new Color3(
-            0.08627450980392157,
-            0.10980392156862745,
-            0.15294117647058825
-        );
-        light2.intensity = 35;
-        light2.radius = 1;
-
-        const shadowGenerator = new ShadowGenerator(1024, light2);
-        shadowGenerator.darkness = 0.4;
-
-        const player = new Player(
-            this.assets,
-            scene,
-            shadowGenerator,
-            new PlayerInput(scene)
-        );
-        const camera = player.activatePlayerCamera();
+        // Camera
+        this._camera = new PlayerCamera(this._scene, asset.mesh);
 
         // create UI
         const guiMenu = AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -96,9 +61,31 @@ export class Game {
         guiMenu.addControl(startBtn);
 
         // scene finished loading
-        await scene.whenReadyAsync();
+        await this._scene.whenReadyAsync();
 
-        return scene;
+        // Active loop game
+        this._loop()
+
+        return this._scene;
     }
-    
+
+    private _loop(): void {
+        this._scene.registerBeforeRender(() => {
+
+            const dt = 0.01;
+            let accumulator = 0.0;
+
+            const frameTime = this._scene.getEngine().getDeltaTime() / 1000.0;
+
+            accumulator += frameTime;
+            while (accumulator >= dt) {
+                accumulator -= dt;
+                this._player.update(dt, this._input, this._camera)
+                this._camera.update(this._input);
+            }
+
+        });
+
+    }
+
 }

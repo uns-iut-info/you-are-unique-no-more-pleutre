@@ -1,4 +1,4 @@
-import { Color4, Mesh, MeshBuilder, Scene, Vector3 } from "@babylonjs/core";
+import { Color3, Color4, HemisphericLight, Mesh, MeshBuilder, PointLight, Scene, Vector3 } from "@babylonjs/core";
 
 export class SandBox {
     private _scene: Scene;
@@ -9,7 +9,15 @@ export class SandBox {
 
     public async load() {
 
-        var ground = MeshBuilder.CreateBox(
+        // Background color
+        this._scene.clearColor = new Color4(
+            0.01568627450980392,
+            0.01568627450980392,
+            0.20392156862745098
+        );
+
+        // Objects
+        const ground = MeshBuilder.CreateBox(
             "ground",
             {
                 width: 24,
@@ -25,6 +33,13 @@ export class SandBox {
                 ],
             }, this._scene);
         ground.scaling = new Vector3(1, 0.02, 1);
-        // var box = Mesh.CreateBox("ground", 3, this._scene);
+
+        // lights
+        const light = new HemisphericLight(
+            "light1",
+            new Vector3(0, 1, 0),
+            this._scene
+        );
+        light.intensity = 0.7;
     }
 }

@@ -1,159 +1,109 @@
 import {
-    Mesh, Quaternion, Scene, ShadowGenerator, TransformNode, UniversalCamera, Vector3
+    Mesh, Quaternion, Scene, Vector3
 } from "@babylonjs/core";
+import { Colision } from "./Colision";
 import { Gravity } from "./gravity";
+import { PlayerInput } from "./inputControler";
 import { PlayerCamera } from "./playerCamera";
 
-export class Player extends TransformNode {
-    // public camera!: any;
-    public scene: Scene;
-    private _input;
-    //Player
-    public mesh: Mesh; //outer collisionbox of player
+export class Player {
 
-    //const values
-    private static readonly PLAYER_SPEED: number = 30;
+    private _scene: Scene;
+    private _mesh: Mesh;
 
-    //player movement vars
-    private _deltaTime: number = 0;
-    private _h!: number;
-    private _v!: number;
+    // Const values
+    private static readonly PLAYER_SPEED_MOVE: number = 40;
+    private static readonly PLAYER_SPEED_ROTATION: number = 10;
+    private static readonly JUMP_FORCE: number = 3000;
 
-    private _speedVector: Vector3 = new Vector3();
-    private _inputAmt!: number;
-
-
-    private _cameraObject: PlayerCamera;
-
+    private _colision: Colision;
     private _gravity: Gravity;
+
+    private _speedVector: Vector3;
 
     constructor(
         assets: any,
         scene: Scene,
-        shadowGenerator: ShadowGenerator,
-        input?: any
     ) {
-        super("player", scene);
-        this.scene = scene;
-
-        this.mesh = assets.mesh;
-        this.mesh.parent = this;
-
-        this._cameraObject = new PlayerCamera(this.scene, this.mesh);
-        this._gravity = new Gravity(this.scene, this.mesh);
-
-        shadowGenerator.addShadowCaster(assets.mesh); //the player mesh will cast shadows
-
-        this._input = input;
+        this._scene = scene;
+        this._mesh = assets.mesh;
+        this._colision = new Colision(this._scene, this._mesh);
+        this._gravity = new Gravity();
+        this._speedVector = Vector3.Zero();
     }
 
-    private _updateFromControls(): void {
 
-        // Camera rotation
-        if (this._input.rotateCamera) {
-            this._cameraObject.rotateCamera(Math.PI / 2)
-        }
+    private _playerMovement(deltaTime: number, input: PlayerInput, camera: PlayerCamera): Vector3 {
 
-        // Move
-        this._player_movement();
+        // get camera axis
+        const fwd = camera.getCameraForward();
+        const right = camera.getCameraRight();
 
-        // Jump
-        if (this._input.jumpKeyDown) {
-            this._gravity.jump()
-        }
+        // calculate acceleration
+        const yAcceleration = fwd.scaleInPlace(input.vertical);
+        const xAcceleration = right.scaleInPlace(input.horizontal);
 
-        // Rotations
-        this._player_rotation();
-    }
+        let acceleration = xAcceleration.add(yAcceleration).normalize();
+        acceleration = acceleration.normalize()
 
-    private _player_movement(): void {
-        //check if there is movement to determine if rotation is needed
-        this._deltaTime = this.scene.getEngine().getDeltaTime() / 1000.0;
-
-        let next_vector = Vector3.Zero(); // vector that holds movement information
-        this._h = this._input.horizontal; //x-axis
-        this._v = this._input.vertical; //z-axis
-
-        // --MOVEMENTS BASED ON CAMERA (as it rotates)--
-        let fwd = this._cameraObject.getCameraForward();
-        let right = this._cameraObject.getCameraRight();
-
-        let correctedVertical = fwd.scaleInPlace(this._v);
-        let correctedHorizontal = right.scaleInPlace(this._h);
-
-        // movement based off of camera's view
-        let move = correctedHorizontal.addInPlace(correctedVertical);
-
-        // normalize for next step
-        next_vector = new Vector3(
-            move.normalize().x,
-            this._speedVector.y,
-            move.normalize().z
+        // calculate speed vector
+        let speedVector = acceleration.scale(deltaTime);
+        speedVector = new Vector3(
+            speedVector._x * Player.PLAYER_SPEED_MOVE,
+            speedVector._y,
+            speedVector._z * Player.PLAYER_SPEED_MOVE,
         );
 
-        //clamp the input value so that diagonal movement isn't twice as fast
-        let inputMag = Math.abs(this._h) + Math.abs(this._v);
-        if (inputMag < 0) {
-            this._inputAmt = 0;
-        } else if (inputMag > 1) {
-            this._inputAmt = 1;
+        return speedVector;
+    }
+
+    private _player_jump(deltaTime: number, input: PlayerInput): Vector3 {
+        if (input.jump && this._colision.isGrounded()) {
+            return Vector3.Up().scale(Player.JUMP_FORCE * deltaTime);
         } else {
-            this._inputAmt = inputMag;
+            return Vector3.Zero();
         }
-
-        //final movement that takes into consideration the inputs
-        this._speedVector = new Vector3(
-            next_vector._x * this._inputAmt * Player.PLAYER_SPEED,
-            next_vector._y,
-            next_vector._z * this._inputAmt * Player.PLAYER_SPEED,
-        );
     }
 
-    private _player_rotation(): void {
-        let input = new Vector3(
-            this._input.horizontalAxis,
-            0,
-            this._input.verticalAxis
-        ); //along which axis is the direction
-        if (input.length() == 0) {
-            //if there's no input detected, prevent rotation and keep player in same rotation
+    private _player_rotation(deltaTime: number, input: PlayerInput, camera: PlayerCamera): void {
+
+        // if there's no input detected, prevent rotation and keep player in same rotation
+        if (input.horizontal + input.vertical == 0) {
             return;
         }
-        //rotation based on input & the camera angle
+
+        // rotation based on input & the camera angle
         let angle = Math.atan2(
-            this._input.horizontalAxis,
-            this._input.verticalAxis
+            input.horizontal,
+            input.vertical
         );
-        angle += this._cameraObject.getCameraRotationY();
+        angle += camera.getCameraRotationY();
+
         let targ = Quaternion.FromEulerAngles(0, angle, 0);
-        this.mesh.rotationQuaternion = Quaternion.Slerp(
-            this.mesh.rotationQuaternion as Quaternion,
+        this._mesh.rotationQuaternion = Quaternion.Slerp(
+            this._mesh.rotationQuaternion as Quaternion,
             targ,
-            10 * this._deltaTime
+            Player.PLAYER_SPEED_ROTATION * deltaTime
         );
     }
 
-    private _beforeRenderUpdate(): void {
-        const dt = 0.01;
-        let accumulator = 0.0;
+    private _updatePlayerPosition(deltaTime: number, input: PlayerInput, camera: PlayerCamera) {
 
-        const frameTime = this.scene.getEngine().getDeltaTime() / 1000.0;
+        // calculate speed vector
+        this._speedVector.addInPlace(this._playerMovement(deltaTime, input, camera));
+        this._speedVector.addInPlace(this._player_jump(deltaTime, input));
+        this._speedVector.addInPlace(this._gravity.update(deltaTime));
+        this._speedVector = this._colision.update(this._speedVector, deltaTime);
 
-        accumulator += frameTime;
+        // calculate position vector
+        const move_vector = this._speedVector.scale(deltaTime);
 
-        while (accumulator >= dt) {
-            accumulator -= dt;
-            this._updateFromControls();
-            this._gravity.updateGravity(this._speedVector, dt);
-        }
-
+        // update player position
+        this._mesh.moveWithCollisions(move_vector);
     }
-
-    public activatePlayerCamera(): UniversalCamera {
-        this.scene.registerBeforeRender(() => {
-            this._beforeRenderUpdate();
-            this._cameraObject._updateCamera();
-        });
-        return this._cameraObject.getUniverselCame();
+    
+    public update(deltaTime: number, input: PlayerInput, camera: PlayerCamera): void {
+        this._updatePlayerPosition(deltaTime, input, camera);
+        this._player_rotation(deltaTime, input, camera);
     }
 }

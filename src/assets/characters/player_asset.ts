@@ -8,7 +8,7 @@ export class PlayerCharacter {
         this._scene = scene;
     }
 
-    public _loadCharacterAssets(scene: Scene) {
+    public load(scene: Scene) {
 
         //collision mesh
         const outer = MeshBuilder.CreateBox(
