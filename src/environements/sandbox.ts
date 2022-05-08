@@ -1,4 +1,4 @@
-import { Color3, Color4, HemisphericLight, Mesh, MeshBuilder, PointLight, Scene, Vector3 } from "@babylonjs/core";
+import { Color4, HemisphericLight, MeshBuilder, Scene, Vector3 } from "@babylonjs/core";
 
 export class SandBox {
     private _scene: Scene;
@@ -33,6 +33,23 @@ export class SandBox {
                 ],
             }, this._scene);
         ground.scaling = new Vector3(1, 0.02, 1);
+        ground.checkCollisions = true;
+        ground.isPickable = true;
+        ground.setEnabled(true);
+
+
+
+        const object = MeshBuilder.CreateBox(
+            "ground",
+            {
+                width: 4,
+                depth: 4,
+                height: 4,
+            }, this._scene);
+
+        object.checkCollisions = true;
+        object.isPickable = true;
+        object.setEnabled(true);
 
         // lights
         const light = new HemisphericLight(
