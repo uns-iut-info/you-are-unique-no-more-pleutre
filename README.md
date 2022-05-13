@@ -1,2 +1,7 @@
 # NoMorePleutre
-Un jeu de qualité (avec BabylonJS)
+
+# L'équipe 
+
+- Rémi Cérès
+- Benjamin Molinet
+- Rémi Felin
