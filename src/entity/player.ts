@@ -1,10 +1,11 @@
 import {
     Mesh, Quaternion, Scene, Vector3
 } from "@babylonjs/core";
-import { Colision } from "./colision";
-import { Gravity } from "./gravity";
-import { PlayerInput } from "./inputControler";
-import { PlayerCamera } from "./playerCamera";
+import { PleutreAsset } from "../assets/pleutreAsset";
+import { PlayerCamera } from "../camera/playerCamera";
+import { Colision } from "../engine/colision";
+import { Gravity } from "../engine/gravity";
+import { PlayerInput } from "../inputControler";
 
 export class Player {
 
@@ -24,11 +25,10 @@ export class Player {
     private _speedVector: Vector3;
 
     constructor(
-        assets: any,
         scene: Scene,
     ) {
         this._scene = scene;
-        this._mesh = assets.mesh;
+        this._mesh = new PleutreAsset(this._scene).load().mesh;
         this._colision = new Colision(this._scene, this._mesh);
         this._gravity = new Gravity();
         this._speedVector = Vector3.Zero();
@@ -54,7 +54,7 @@ export class Player {
         // Limit accumulation
         let x = newSpeedVector._x * Player.PLAYER_SPEED_MOVE;
         let z = newSpeedVector._z * Player.PLAYER_SPEED_MOVE;
-        
+
         if (Math.abs(this._speedVector._x) > Math.abs(x) * Player.MAX_PLAYER_SPEED_MOVE) {
             x = 0
         }
@@ -72,7 +72,7 @@ export class Player {
     }
 
     private _player_jump(deltaTime: number, input: PlayerInput): Vector3 {
-        
+
         if (input.jump && this._colision.isGrounded()) {
             return Vector3.Up().scale(Player.JUMP_FORCE * deltaTime);
         } else {
@@ -123,14 +123,18 @@ export class Player {
         // update player position
         this._mesh.moveWithCollisions(move_vector);
     }
-    
+
     public update(deltaTime: number, input: PlayerInput, camera: PlayerCamera): void {
         this._updatePlayerPosition(deltaTime, input, camera);
         this._playerRotation(deltaTime, input, camera);
         this._limitSpeed()
     }
 
-    public getColision() : Colision {
+    public getColision(): Colision {
         return this._colision;
+    }
+
+    public getMesh(): Mesh {
+        return this._mesh;
     }
 }

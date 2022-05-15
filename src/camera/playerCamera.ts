@@ -6,7 +6,7 @@ import {
     UniversalCamera,
     Vector3
 } from "@babylonjs/core";
-import { PlayerInput } from "./inputControler";
+import { PlayerInput } from "../inputControler";
 
 export class PlayerCamera {
     private _camRoot!: TransformNode;

@@ -1,6 +1,6 @@
 import { Color3, Color4, Matrix, Mesh, MeshBuilder, Quaternion, Scene, StandardMaterial, Vector3 } from "@babylonjs/core";
 
-export class PlayerCharacter {
+export class PleutreAsset {
 
     private _scene: Scene;
 
@@ -8,13 +8,13 @@ export class PlayerCharacter {
         this._scene = scene;
     }
 
-    public load(scene: Scene) {
+    public load() {
 
         //collision mesh
         const outer = MeshBuilder.CreateBox(
             "outer",
             { width: 2, depth: 1, height: 3 },
-            scene
+            this._scene
         );
         // outer.isVisible = false;
         outer.isPickable = false;
@@ -47,13 +47,13 @@ export class PlayerCharacter {
                     new Color4(0, 0, 1, 1),
                 ],
             },
-            scene
+            this._scene
         );
         box.position.y = 1.5;
         box.position.z = 1;
 
-        var body = Mesh.CreateCylinder("body", 3, 2, 2, 0, 0, scene);
-        var bodymtl = new StandardMaterial("red", scene);
+        var body = Mesh.CreateCylinder("body", 3, 2, 2, 0, 0, this._scene);
+        var bodymtl = new StandardMaterial("red", this._scene);
         bodymtl.diffuseColor = new Color3(0.8, 0.5, 0.5);
         body.material = bodymtl;
         body.isPickable = false;
