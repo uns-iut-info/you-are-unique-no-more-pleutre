@@ -30,10 +30,10 @@ export class Game {
         this._boxes = [];
     }
 
-    public async load() {
+    public async load(level = "demo") {
 
         // Environement
-        const environment = new SandBox(this._scene);
+        const environment = new SandBox(this._scene, level);
         await environment.load();
         this._boxes = environment.getBoxes();
         MESH_OBJECT = environment.getMeshObject();

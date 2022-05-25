@@ -48,7 +48,7 @@ export class LevelSelector {
         // level sandBox
         const levelDemo = Button.CreateSimpleButton(
             "Demo",
-            "Go To Level SandBox"
+            "Go To Level SandBox",
         );
         levelDemo.width = 0.2;
         levelDemo.height = "40px";
@@ -57,14 +57,40 @@ export class LevelSelector {
             this._stateManage.switchTo(States.GAME);
         });
         guiMenu.addControl(levelDemo);
+        // level 1
+        const level1 = Button.CreateSimpleButton(
+            "Level 1",
+            "Go To Level 1",
+        );
+        level1.width = 0.2;
+        level1.height = "40px";
+        level1.color = "white";
+        level1.top = "54px";
+        level1.onPointerDownObservable.add(() => {
+            this._stateManage.switchTo(States.GAME1);
+        });
+        guiMenu.addControl(level1);
+        // level 2
+        const level2 = Button.CreateSimpleButton(
+            "Level 2",
+            "Go To Level 2",
+        );
+        level2.width = 0.2;
+        level2.height = "40px";
+        level2.color = "white";
+        level2.top = "104px";
+        level2.onPointerDownObservable.add(() => {
+            this._stateManage.switchTo(States.GAME2);
+        });
+        guiMenu.addControl(level2);
 
         // back button
         const startBtn = Button.CreateSimpleButton("Back", "Back");
         startBtn.width = 0.2;
         startBtn.height = "40px";
         startBtn.color = "white";
-        startBtn.top = "-34px";
-        startBtn.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
+        startBtn.top = "-54px";
+        // startBtn.verticalAlignment = Control.VERTICAL_ALIGNMENT_BOTTOM;
         startBtn.onPointerDownObservable.add(() => {
             this._stateManage.switchTo(States.MAINMENU);
             scene.detachControl(); //observables disabled

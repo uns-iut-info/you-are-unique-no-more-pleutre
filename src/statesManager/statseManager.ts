@@ -47,6 +47,14 @@ export class StatesManager {
                 const game = new Game(this._engine, this);
                 this._scene = await game.load();
                 break;
+            case States.GAME1:
+                const game1 = new Game(this._engine, this);
+                this._scene = await game1.load(States.GAME1);
+                break;
+            case States.GAME2:
+                const game2 = new Game(this._engine, this);
+                this._scene = await game2.load(States.GAME2);
+                break;
         }
     }
 
