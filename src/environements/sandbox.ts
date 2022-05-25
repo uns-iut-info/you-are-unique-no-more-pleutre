@@ -1,7 +1,6 @@
-import { Color4, HemisphericLight, MeshBuilder, Scene, Vector3 } from "@babylonjs/core";
+import { Color3, Color4, HemisphericLight, MeshBuilder, Scene, Vector3 } from "@babylonjs/core";
 import { Box } from "../entity/box";
-
-
+import { colorsEnum } from "../assets/colorsEnum";
 
 export class SandBox {
     private _scene: Scene;
@@ -33,14 +32,24 @@ export class SandBox {
                 depth: 24,
                 height: 24,
                 faceColors: [
-                    new Color4(1, 0, 1, 1),
-                    new Color4(1, 1, 1, 1),
-                    new Color4(0, 0, 0, 1),
-                    new Color4(1, 1, 0, 1),
-                    new Color4(0, 1, 1, 1),
-                    new Color4(0, 0, 1, 1),
+                    Color4.FromColor3(Color3.FromHexString(colorsEnum.DARK_BLUE)),
+                    Color4.FromColor3(Color3.FromHexString(colorsEnum.DARK_BLUE)),
+                    Color4.FromColor3(Color3.FromHexString(colorsEnum.DARK_BLUE)),
+                    Color4.FromColor3(Color3.FromHexString(colorsEnum.DARK_BLUE)),
+                    Color4.FromColor3(Color3.FromHexString(colorsEnum.DARK_BLUE)),
+                    Color4.FromColor3(Color3.FromHexString(colorsEnum.DARK_BLUE)),
+                    // new Color4(1, 0, 1, 1),
+                    // new Color4(1, 1, 1, 1),
+                    // new Color4(0, 0, 0, 1),
+                    // new Color4(1, 1, 0, 1),
+                    // new Color4(0, 1, 1, 1),
+                    // new Color4(0, 0, 1, 1),
                 ],
             }, this._scene);
+        ground.enableEdgesRendering();
+        ground.edgesColor = Color4.FromColor3(Color3.FromHexString(colorsEnum.LIGHT_BLUE))
+        ground.edgesWidth = 10;        
+        ground.edgesShareWithInstances = true;
         ground.scaling = new Vector3(1, 0.02, 1);
         ground.checkCollisions = true;
         ground.isPickable = true;

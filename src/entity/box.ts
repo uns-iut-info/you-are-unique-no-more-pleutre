@@ -1,5 +1,5 @@
 import {
-    Mesh, Scene, Vector3, VertexBuffer
+    Mesh, Scene, Vector3, VertexBuffer, StandardMaterial, Color3, Color4
 } from "@babylonjs/core";
 import { boxAsset } from "../assets/boxAsset";
 import { PlayerCamera } from "../camera/playerCamera";
