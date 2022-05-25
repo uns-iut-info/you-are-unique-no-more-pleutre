@@ -1,12 +1,15 @@
 import { Engine, Scene } from "@babylonjs/core";
 import { AdvancedDynamicTexture, Button, Control } from "@babylonjs/gui";
-import { PlayerCharacter as PleutreAsset } from "../../assets/characters/player_asset";
+import { PleutreAsset } from "../../assets/pleutreAsset";
+import { PlayerCamera } from "../../camera/playerCamera";
 import { SandBox } from "../../environements/sandbox";
 import { PlayerInput } from "../../inputControler";
-import { Player } from "../../player";
-import { PlayerCamera } from "../../playerCamera";
+import { Player } from "../../entity/player";
 import { States } from "../statesEnum";
 import { StatesManager } from "../statseManager";
+import { Box } from "../../entity/box";
+
+export let MESH_OBJECT: { [id: string]: any };
 
 export class Game {
     private _engine: Engine;
@@ -17,10 +20,14 @@ export class Game {
     private _camera!: PlayerCamera;
     private _input!: PlayerInput
 
+    private _boxes: Box[];
+
+
     constructor(engine: Engine, stateManager: StatesManager) {
         this._engine = engine;
         this._stateManage = stateManager;
         this._scene = new Scene(this._engine);
+        this._boxes = [];
     }
 
     public async load() {
@@ -28,22 +35,20 @@ export class Game {
         // Environement
         const environment = new SandBox(this._scene);
         await environment.load();
+        this._boxes = environment.getBoxes();
+        MESH_OBJECT = environment.getMeshObject();
 
-        // Player Asset
-        const asset = new PleutreAsset(this._scene).load(this._scene);
-        asset.mesh.position._y = 5;
 
         // Input
         this._input = new PlayerInput(this._scene);
 
         // Player
-        this._player = new Player(
-            asset,
-            this._scene,
-        );
+        this._player = new Player(this._scene);
+        this._player.getMesh().position._y = 5;
+        MESH_OBJECT[this._player.getMesh().id] = this._player;
 
         // Camera
-        this._camera = new PlayerCamera(this._scene, asset.mesh);
+        this._camera = new PlayerCamera(this._scene, this._player.getMesh());
 
         // create UI
         const guiMenu = AdvancedDynamicTexture.CreateFullscreenUI("UI");
@@ -82,6 +87,11 @@ export class Game {
                 accumulator -= dt;
                 this._player.update(dt, this._input, this._camera)
                 this._camera.update(this._input);
+
+                for (const box of this._boxes) {
+                    box.update(dt, this._camera);
+                }
+
             }
 
         });

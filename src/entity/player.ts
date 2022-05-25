@@ -1,10 +1,11 @@
 import {
     Mesh, Quaternion, Scene, Vector3
 } from "@babylonjs/core";
-import { Colision } from "./Colision";
-import { Gravity } from "./gravity";
-import { PlayerInput } from "./inputControler";
-import { PlayerCamera } from "./playerCamera";
+import { PleutreAsset } from "../assets/pleutreAsset";
+import { PlayerCamera } from "../camera/playerCamera";
+import { Colision } from "../engine/colision";
+import { Gravity } from "../engine/gravity";
+import { PlayerInput } from "../inputControler";
 
 export class Player {
 
@@ -13,8 +14,10 @@ export class Player {
 
     // Const values
     private static readonly PLAYER_SPEED_MOVE: number = 40;
+    private static readonly MAX_PLAYER_SPEED_MOVE: number = 35;
     private static readonly PLAYER_SPEED_ROTATION: number = 10;
-    private static readonly JUMP_FORCE: number = 3000;
+    private static readonly JUMP_FORCE: number = 2000;
+    private static readonly MAX_SPEED: number = 40;
 
     private _colision: Colision;
     private _gravity: Gravity;
@@ -22,11 +25,10 @@ export class Player {
     private _speedVector: Vector3;
 
     constructor(
-        assets: any,
         scene: Scene,
     ) {
         this._scene = scene;
-        this._mesh = assets.mesh;
+        this._mesh = new PleutreAsset(this._scene).load().mesh;
         this._colision = new Colision(this._scene, this._mesh);
         this._gravity = new Gravity();
         this._speedVector = Vector3.Zero();
@@ -47,17 +49,30 @@ export class Player {
         acceleration = acceleration.normalize()
 
         // calculate speed vector
-        let speedVector = acceleration.scale(deltaTime);
-        speedVector = new Vector3(
-            speedVector._x * Player.PLAYER_SPEED_MOVE,
-            speedVector._y,
-            speedVector._z * Player.PLAYER_SPEED_MOVE,
+        let newSpeedVector = acceleration.scale(deltaTime);
+
+        // Limit accumulation
+        let x = newSpeedVector._x * Player.PLAYER_SPEED_MOVE;
+        let z = newSpeedVector._z * Player.PLAYER_SPEED_MOVE;
+
+        if (Math.abs(this._speedVector._x) > Math.abs(x) * Player.MAX_PLAYER_SPEED_MOVE) {
+            x = 0
+        }
+        if (Math.abs(this._speedVector._z) > Math.abs(z) * Player.MAX_PLAYER_SPEED_MOVE) {
+            z = 0
+        }
+
+        newSpeedVector = new Vector3(
+            x,
+            newSpeedVector._y,
+            z
         );
 
-        return speedVector;
+        return newSpeedVector;
     }
 
     private _player_jump(deltaTime: number, input: PlayerInput): Vector3 {
+
         if (input.jump && this._colision.isGrounded()) {
             return Vector3.Up().scale(Player.JUMP_FORCE * deltaTime);
         } else {
@@ -65,7 +80,7 @@ export class Player {
         }
     }
 
-    private _player_rotation(deltaTime: number, input: PlayerInput, camera: PlayerCamera): void {
+    private _playerRotation(deltaTime: number, input: PlayerInput, camera: PlayerCamera): void {
 
         // if there's no input detected, prevent rotation and keep player in same rotation
         if (input.horizontal + input.vertical == 0) {
@@ -87,6 +102,13 @@ export class Player {
         );
     }
 
+    private _limitSpeed() {
+        if (this._speedVector.length() > Player.MAX_SPEED) {
+            this._speedVector = this._speedVector.normalize().scale(Player.MAX_SPEED)
+        }
+
+    }
+
     private _updatePlayerPosition(deltaTime: number, input: PlayerInput, camera: PlayerCamera) {
 
         // calculate speed vector
@@ -101,9 +123,18 @@ export class Player {
         // update player position
         this._mesh.moveWithCollisions(move_vector);
     }
-    
+
     public update(deltaTime: number, input: PlayerInput, camera: PlayerCamera): void {
         this._updatePlayerPosition(deltaTime, input, camera);
-        this._player_rotation(deltaTime, input, camera);
+        this._playerRotation(deltaTime, input, camera);
+        this._limitSpeed()
+    }
+
+    public getColision(): Colision {
+        return this._colision;
+    }
+
+    public getMesh(): Mesh {
+        return this._mesh;
     }
 }
